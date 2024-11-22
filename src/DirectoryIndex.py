@@ -81,70 +81,14 @@ class DirectoryIndex:
         Get the stat of a file. If a path to a directory is given, it will only return the `date`. <br>
         A path to a file returns `date` and `size` (in bytes).
         """
-        if path[-1] == "/":
-            path = path[:-1] # prevent possible path error
-        data = self._get(path)
-        date = ""
-        
-        size = 0
-        parent_path = ""
-        isFile = False
-        file_name = path.split("/")[-1]
-        if data.headers['Content-Type'] != "text/html": # not a dir
-            # get the parent path
-            isFile = True
-            size = int(data.headers["Content-Length"])
-            parent_path = self._get_parent_path(path)
-            data = self._get(parent_path)
-        else:
-            # file_name will be the directory name, without the parenting paths
-            file_name = path.split("/")[-1]
-            if file_name[-1] == "/":
-                file_name = file_name[:-1]
+        pass # TODO: Implement stat method. holy fuck its hard :c
             
-        # We need to write a custom parser to get the date. It is present in in the request body HTML, however it is not formatted in a way that can be easily parsed.
-        # Example: <a href="...">...</a>  2021-08-01 12:00 // and so on
-        # seperate the date from the rest of the text
-        sp = BeautifulSoup(data.text, "html.parser")
-        
-        # get the <pre> element
-        pre = sp.find("pre")
-        
-        # remove each <a> element
-        index_map = {}
-        i = 0
-        for a in pre.find_all("a"):
-            index_map[i] = unquote( a.attrs["href"])
-            i += 1
-            a.decompose()
-            
-        # get the text
-        text = pre.get_text()
-        
-        # split the text by newline
-        k = text.split("\n")
-        pattern = re.compile(r'(\d{2}-\w{3}-\d{4} \d{2}:\d{2})\s+(\d+)')
-        lines =  [
-            (match.group(1), int(match.group(2)))
-            for line in k
-            if (match := pattern.search(line))
-        ]
-        # match the index of the provided path with the lines array
-        for obj in lines:
-            if file_name in index_map.values():
-                date = obj[0]
-                break
-            
-        if isFile:
-            return {"date": date, "size": size}
-        else:
-            return {"date": date}
-    
+
 if __name__ == "__main__": # if being ran as a script
     url = "https://vaporwave.ivan.moe/list/"
     di = DirectoryIndex(url)
     
     
     print("File Stat Test:")
-    file = di.stat("/B o d y l i n e/B o d y l i n e - LIGHT DESIGN")
+    file = di.stat("/Audi/Audi - finals/11. 1986.wav")
     print(file)
